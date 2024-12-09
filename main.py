@@ -2,28 +2,51 @@ import pygame
 import os
 import time
 import random
+import button
+import sys
+import math
+
 pygame.font.init()
 
-WIDTH, HEIGHT = 1100, 600
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+WIDTH, HEIGHT = 900, 500
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Space Shooter Tutorial")
 
 # Load images
-RED_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_red_small.png")).convert_alpha()
-GREEN_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_green_small.png")).convert_alpha()
-BLUE_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_blue_small.png")).convert_alpha()
+ENEMY_ONE = pygame.image.load(os.path.join("assets/characters", "enemy_1_goblin.png")).convert_alpha()
+ENEMY_TWO = pygame.image.load(os.path.join("assets/characters", "enemy_2_armored.png")).convert_alpha()
+ENEMY_THREE = pygame.image.load(os.path.join("assets/characters", "enemy_3_skeleton.png")).convert_alpha()
 
 # Player player
-YELLOW_SPACE_SHIP = pygame.image.load(os.path.join("assets", "pixel_ship_yellow.png")).convert_alpha()
+CHARACTER_ONE = pygame.image.load(os.path.join("assets/characters", "hero_1_archer.png")).convert_alpha()
+CHARACTER_TWO = pygame.image.load(os.path.join("assets/characters", "hero_2_necro.png")).convert_alpha()
+CHARACTER_THREE = pygame.image.load(os.path.join("assets/characters", "hero_3_wizard.png")).convert_alpha()
 
 # Lasers
-RED_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_red.png")).convert_alpha()
-GREEN_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_green.png")).convert_alpha()
-BLUE_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_blue.png")).convert_alpha()
 YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png")).convert_alpha()
 
 # Background
 BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "background-black.png")), (WIDTH, HEIGHT)).convert_alpha()
+MENU_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgrounds", "menu_bg.png")), (WIDTH, HEIGHT)).convert_alpha()
+
+# Buttons
+START_BTN = pygame.image.load(os.path.join("assets/buttons", "start_btn.png")).convert_alpha()
+OPTIONS_BTN = pygame.image.load(os.path.join("assets/buttons", "options_btn.png")).convert_alpha()
+QUIT_BTN = pygame.image.load(os.path.join("assets/buttons", "quit_btn.png")).convert_alpha()
+
+start_btn = button.Button(350, 200, START_BTN, 0.8)
+options_btn = button.Button(350, 275, OPTIONS_BTN, 0.8)
+quit_btn = button.Button(350, 350, QUIT_BTN, 0.8)
+
+bg_width = BG.get_width()
+bg_rect = BG.get_rect()
+
+scroll = 0
+tiles = math.ceil(WIDTH  / bg_width) + 1
+
+def draw_text(text, font, text_col, x, y):
+  img = font.render(text, True, text_col)
+  SCREEN.blit(img, (x, y))
 
 class Laser:
     def __init__(self, x, y, img):
@@ -93,7 +116,7 @@ class Ship:
 class Player(Ship):
     def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
-        self.ship_img = YELLOW_SPACE_SHIP
+        self.ship_img = CHARACTER_ONE
         self.laser_img = YELLOW_LASER
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
@@ -122,9 +145,9 @@ class Player(Ship):
 
 class Enemy(Ship):
     COLOR_MAP = {
-        "red": (RED_SPACE_SHIP),
-        "green": (GREEN_SPACE_SHIP),
-        "blue": (BLUE_SPACE_SHIP)
+        "enemyOne": (ENEMY_ONE),
+        "enemyTwo": (ENEMY_TWO),
+        "enemyThree": (ENEMY_THREE)
     }
     
     def __init__(self, x, y, color, health=100):
@@ -164,22 +187,34 @@ def main():
     lost_count = 0
 
     def redraw_window():
-        WIN.blit(BG, (0,0))
+        global scroll
+        #draw scrolling background
+        for i in range(-1, tiles):
+            SCREEN.blit(BG, (i * bg_width + scroll, 0))
+            bg_rect.x = i * bg_width + scroll
+
+        #scroll background
+        scroll += 5
+
+        #reset scroll
+        if scroll >= bg_width:
+            scroll = 0
+            
         # draw text
         lives_label = main_font.render(f"Lives: {lives}", 1, (255,255,255))
         level_label = main_font.render(f"Level: {level}", 1, (255,255,255))
 
-        WIN.blit(lives_label, (10, 10))
-        WIN.blit(level_label, (WIDTH - level_label.get_width() - 10, 10))
+        SCREEN.blit(lives_label, (10, 10))
+        SCREEN.blit(level_label, (WIDTH - level_label.get_width() - 10, 10))
 
         for enemy in enemies:
-            enemy.draw(WIN)
+            enemy.draw(SCREEN)
 
-        player.draw(WIN)
+        player.draw(SCREEN)
 
         if lost:
             lost_label = lost_font.render("You Lost!!", 1, (255,255,255))
-            WIN.blit(lost_label, (WIDTH/2 - lost_label.get_width()/2, 350))
+            SCREEN.blit(lost_label, (WIDTH/2 - lost_label.get_width()/2, 350))
 
         pygame.display.update()
 
@@ -203,8 +238,8 @@ def main():
             for i in range(wave_length):
                 enemy = Enemy(
                     x=random.randint(WIDTH, WIDTH + 1000),  # Spawn off-screen to the right
-                    y=random.randint(50, HEIGHT - 100),    # Random y position within screen height
-                    color=random.choice(["red", "blue", "green"])
+                    y=random.randint(75, HEIGHT - 100),    # Random y position within screen height
+                    color=random.choice(["enemyOne", "enemyTwo", "enemyThree"])
                 )
                 enemies.append(enemy)
 
@@ -240,16 +275,23 @@ def main_menu():
     title_font = pygame.font.SysFont("comicsans", 70)
     run = True
     while run:
-        WIN.blit(BG, (0,0))
-        title_label = title_font.render("Press the mouse to begin...", 1, (255,255,255))
-        WIN.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 350))
-        pygame.display.update()
+        
+        SCREEN.blit(MENU_BG, (0,0))
+        
+        if start_btn.draw(SCREEN):
+            main()
+        if options_btn.draw(SCREEN):
+            print('options')
+        if quit_btn.draw(SCREEN):
+            pygame.quit()
+            sys.exit()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                main()
+        
+        pygame.display.update()
     pygame.quit()
-
-
+    
+    
 main_menu()
