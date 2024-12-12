@@ -39,6 +39,7 @@ BG_TWO = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgroun
 MENU_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgrounds", "menu_bg.png")), (WIDTH, HEIGHT)).convert_alpha()
 OPTION_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgrounds", "options_bg.png")), (WIDTH, HEIGHT)).convert_alpha()
 SELECT_CHARACTER_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgrounds", "select_character_bg.png")), (WIDTH, HEIGHT)).convert_alpha()
+SELECT_BACKGROUND_BG = pygame.transform.scale(pygame.image.load(os.path.join("assets/backgrounds", "select_background_bg.png")), (WIDTH, HEIGHT)).convert_alpha()
 
 # Buttons
 START_BTN = pygame.image.load(os.path.join("assets/buttons", "start_btn.png")).convert_alpha()
@@ -416,7 +417,7 @@ def backgroundMenu():
     
     while run:
     
-        SCREEN.blit(SELECT_CHARACTER_BG, (0,0))
+        SCREEN.blit(SELECT_BACKGROUND_BG, (0,0))
         
         if bg_one.draw(SCREEN):
             game_background = BG_ONE
